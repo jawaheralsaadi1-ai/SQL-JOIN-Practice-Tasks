@@ -1,0 +1,150 @@
+USE CompanyDB; -- Kept in CompanyDB context matching your setup script direction
+GO
+
+-- ==========================================
+-- 1. CLEAN RESET ENVIRONMENT
+-- ==========================================
+DROP TABLE IF EXISTS Appointments;
+DROP TABLE IF EXISTS Patients;
+DROP TABLE IF EXISTS Doctors;
+GO
+
+-- ==========================================
+-- 2. CREATE HOSPITAL TABLES
+-- ==========================================
+CREATE TABLE Patients (
+    PatientID INT PRIMARY KEY,
+    Name VARCHAR(50) NOT NULL,
+    Age INT,
+    Gender VARCHAR(10)
+);
+
+CREATE TABLE Doctors (
+    DoctorID INT PRIMARY KEY,
+    Name VARCHAR(50) NOT NULL,
+    Specialty VARCHAR(50)
+);
+
+CREATE TABLE Appointments (
+    AppointmentID INT PRIMARY KEY,
+    PatientID INT,
+    DoctorID INT,
+    Date DATE,
+    FOREIGN KEY (PatientID) REFERENCES Patients(PatientID),
+    FOREIGN KEY (DoctorID) REFERENCES Doctors(DoctorID)
+);
+GO
+
+-- ==========================================
+-- 3. POPULATE INITIAL APPOINTMENTS DATA
+-- ==========================================
+INSERT INTO Patients (PatientID, Name, Age, Gender) VALUES 
+(1, 'Said Al-Saadi', 45, 'Male'),
+(2, 'Zakia Al-Harthy', 30, 'Female'),
+(3, 'Fahad Al-Balushi', 12, 'Male'),
+(4, 'Maryam Al-Kindi', 65, 'Female'),
+(5, 'Adnan Al-Farsi', 28, 'Male'), 
+(6, 'Asma Al-Qasmi', 34, 'Female');
+
+INSERT INTO Doctors (DoctorID, Name, Specialty) VALUES 
+(10, 'Dr. Nasser', 'Cardiology'),
+(11, 'Dr. Hanan', 'Pediatrics'),
+(12, 'Dr. Sami', 'Dermatology'),
+(13, 'Dr. Noor', 'General Medicine');
+
+INSERT INTO Appointments (AppointmentID, PatientID, DoctorID, Date) VALUES 
+(1001, 1, 10, '2026-06-01'),
+(1002, 1, 12, '2026-06-05'), 
+(1003, 2, 13, '2026-06-02'),
+(1004, 3, 11, '2026-06-03'),
+(1005, 4, 10, '2026-06-04'),
+(1006, 5, 12, '2026-06-06'),
+(1007, 6, 13, '2026-06-07'),
+(1008, 2, 11, '2026-06-08');
+GO
+
+-- ==========================================
+-- 4. APPLY UPDATES & DELETIONS
+-- ==========================================
+UPDATE Patients SET Age = 46 WHERE PatientID = 1;
+UPDATE Doctors SET Specialty = 'General Surgery' WHERE DoctorID = 13;
+UPDATE Appointments SET Date = '2026-06-15' WHERE AppointmentID = 1001;
+UPDATE Patients SET Name = 'Asma Al-Qasmiya' WHERE PatientID = 6; 
+UPDATE Appointments SET DoctorID = 13 WHERE AppointmentID = 1006; 
+
+DELETE FROM Appointments WHERE PatientID = 5;
+DELETE FROM Patients WHERE PatientID = 5;
+DELETE FROM Appointments WHERE DoctorID = 12;
+DELETE FROM Doctors WHERE DoctorID = 12;
+DELETE FROM Appointments WHERE AppointmentID = 1004; 
+DELETE FROM Appointments WHERE DoctorID = 10; 
+GO
+
+-- ==========================================
+-- 5. RUN ASSIGNMENT JOIN QUERIES
+-- ==========================================
+
+-- Task 8: LEFT JOIN with Missing Data Check
+SELECT 
+    p.Name AS Title, 
+    d.Name AS AuthorName
+FROM Patients p
+LEFT JOIN Appointments a ON p.PatientID = a.PatientID
+LEFT JOIN Doctors d ON a.DoctorID = d.DoctorID
+ORDER BY p.Name;
+
+-- Task 9: RIGHT JOIN with Filtering
+SELECT 
+    a.AppointmentID AS OrderID, 
+    p.Age AS Amount 
+FROM Appointments a
+RIGHT JOIN Patients p ON a.PatientID = p.PatientID
+WHERE p.Age IS NULL OR p.Age > 0
+ORDER BY a.AppointmentID;
+
+-- Task 10: FULL OUTER JOIN with Data Comparison
+SELECT 
+    p.Name AS ProductName, 
+    p.Age AS StockQty, 
+    a.AppointmentID AS SoldQty
+FROM Patients p
+FULL OUTER JOIN Appointments a ON p.PatientID = a.PatientID
+ORDER BY p.Name;
+
+-- Task 12: CROSS JOIN with Business Scenario
+SELECT 
+    p.Name AS ProductName, 
+    d.Name AS StoreName
+FROM Patients p
+CROSS JOIN Doctors d
+ORDER BY d.Name, p.Name;
+
+-- Task 13: INNER JOIN with Aggregation
+SELECT 
+    p.PatientID AS OrderID, 
+    COUNT(a.AppointmentID) AS TotalQuantity
+FROM Patients p
+INNER JOIN Appointments a ON p.PatientID = a.PatientID
+GROUP BY p.PatientID
+ORDER BY TotalQuantity DESC;
+
+-- Task 14: LEFT JOIN with COUNT
+SELECT 
+    p.PatientID, 
+    p.Name, 
+    COUNT(a.AppointmentID) AS OrderCount
+FROM Patients p
+LEFT JOIN Appointments a ON p.PatientID = a.PatientID
+GROUP BY p.PatientID, p.Name
+ORDER BY OrderCount DESC;
+
+-- Task 15: Mixed JOIN Challenge
+SELECT 
+    p.Name, 
+    d.Specialty AS ClassName, 
+    d.Name AS CourseName
+FROM Patients p
+LEFT JOIN Appointments a ON p.PatientID = a.PatientID
+LEFT JOIN Doctors d ON a.DoctorID = d.DoctorID
+ORDER BY p.Name;
+GO
